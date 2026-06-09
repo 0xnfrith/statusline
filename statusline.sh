@@ -1,9 +1,16 @@
 #!/bin/bash
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
+# Statusline-ID: ghost-sec9
+# Statusline-Version: 0.2.0
+#   ^ Machine-readable identity + upgrade key, parsed by the
+#     configure-statusline skill to tell our statusline apart from a
+#     third-party one and to decide whether an installed copy is older.
+#     Keep Statusline-Version in lockstep with .claude-plugin/plugin.json.
+#
 # Rows:
-#   1. 幽霊 ghost.sec9 identity · BRANCH · CWD · model · ctx bar+% · BKK/EST/PST
-#   2. 「 rotating GITS quote 」 — minute-parity rotation
+#   1. BRANCH · CWD · model · ctx bar+% · effort  — live session state
+#   2. 幽霊 ghost.sec9 identity glitch · 「 rotating GITS quote 」 · BKK/EST/PST
 #
 # Data sources:
 #   - stdin JSON (Claude Code session info: cwd, model, context_window)
@@ -27,11 +34,12 @@ set +e
 # Parse Claude Code's JSON input (single jq call)
 # ---------------------------------------------------------------------------
 input=$(cat)
-IFS=$'\t' read -r cwd model used_pct <<< "$(
+IFS=$'\t' read -r cwd model used_pct effort <<< "$(
   echo "$input" | jq -r '[
     .workspace.current_dir // "",
     .model.display_name // "",
-    (.context_window.used_percentage // "" | tostring)
+    (.context_window.used_percentage // "" | tostring),
+    .effort.level // ""
   ] | @tsv' 2>/dev/null
 )"
 
@@ -74,6 +82,24 @@ if [[ -n "$used_pct" && "$used_pct" != "null" && "$used_pct" != "" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Effort level — session reasoning effort, color-coded by intensity.
+# `.effort.level` is absent when the model doesn't support the param, so the
+# token simply disappears in that case.
+# ---------------------------------------------------------------------------
+effort_info=""
+if [[ -n "$effort" && "$effort" != "null" ]]; then
+    case "$effort" in
+        low)    eff_color="\033[2;37m" ;;   # dim white — minimal
+        medium) eff_color="\033[1;36m" ;;   # cyan
+        high)   eff_color="\033[1;33m" ;;   # yellow
+        xhigh)  eff_color="\033[1;35m" ;;   # magenta
+        max)    eff_color="\033[1;31m" ;;   # red — full burn
+        *)      eff_color="\033[1;37m" ;;   # unknown — bright white
+    esac
+    effort_info=$(printf ' \033[2;35m◆\033[0m \033[2;37mEFF\033[0m '"$eff_color"'%s\033[0m' "$effort")
+fi
+
+# ---------------------------------------------------------------------------
 # Clocks: BKK │ EST │ PST (24h). IANA zones handle DST automatically.
 # ---------------------------------------------------------------------------
 bkk=$(TZ="Asia/Bangkok" date +%H:%M)
@@ -104,7 +130,7 @@ quote_text="${quotes[$q_idx]}"
 RESET="\033[0m"
 
 # ---------------------------------------------------------------------------
-# Line 1 assembly
+# Glitch animation prefix — leads line 2.
 # ---------------------------------------------------------------------------
 # Prefix glitch animation — 16-tick cycle.
 #   Frame 0: original `幽霊 ghost.sec9 ▸`
@@ -155,20 +181,28 @@ for ((i=0; i<15; i++)); do
   fi
 done
 
+# ---------------------------------------------------------------------------
+# Line 1 assembly — live session state (branch · cwd · model · ctx bar)
+# ---------------------------------------------------------------------------
 line1=""
-line1+="$(printf '%b' "$prefix")"
-[[ -n "$branch" ]] && line1+=$(printf ' \033[1;33m%s\033[0m' "$branch")
-line1+=$(printf ' \033[2;35m◆\033[0m')
-[[ -n "$cwd_short" ]] && line1+=$(printf ' \033[1;36m%s\033[0m' "$cwd_short")
+[[ -n "$branch" ]] && line1+=$(printf '\033[1;33m%s\033[0m \033[2;35m◆\033[0m ' "$branch")
+[[ -n "$cwd_short" ]] && line1+=$(printf '\033[1;36m%s\033[0m' "$cwd_short")
 [[ -n "$model_lc" ]] && line1+=$(printf ' \033[2;35m◆\033[0m \033[2;36m%s\033[0m' "$model_lc")
 line1+="$context_info"
-line1+="$clocks"
+line1+="$effort_info"
+
+# ---------------------------------------------------------------------------
+# Line 2 assembly — identity glitch · rotating quote (breath-glow) · clocks
+# ---------------------------------------------------------------------------
+if (( phase_breath == 0 )); then quote_color="\033[0;35m"; else quote_color="\033[2;35m"; fi
+line2="$(printf '%b' "$prefix")"
+line2+=$(printf ' \033[2;35m┄┄\033[0m')
+line2+=$(printf " ${quote_color}「 %s 」${RESET}" "$quote_text")
+line2+=$(printf ' \033[2;35m┄┄\033[0m')
+line2+="$clocks"
 
 # ---------------------------------------------------------------------------
 # Emit
 # ---------------------------------------------------------------------------
 echo "$line1"
-
-# Line 2 — rotating quote with breath-glow
-if (( phase_breath == 0 )); then quote_color="\033[0;35m"; else quote_color="\033[2;35m"; fi
-printf "\033[2;35m┄┄\033[0m ${quote_color}「 %s 」${RESET} \033[2;35m┄┄\033[0m\n" "$quote_text"
+echo "$line2"

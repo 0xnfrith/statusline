@@ -7,21 +7,24 @@ Themed Claude Code statusline. Pure inline. No MCP server, no cache, no external
 A single bash script (`statusline.sh`) that Claude Code invokes after each assistant message. It reads the session JSON from stdin and emits two lines:
 
 ```
-幽霊 ghost.sec9 ▸ <branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar> ◆ BKK <hh:mm> │ EST <hh:mm> │ PST <hh:mm>
-┄┄ 「 <rotating GITS quote> 」 ┄┄
+<branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar> ◆ EFF <effort>
+幽霊 ghost.sec9 ▸ ┄┄ 「 <rotating GITS quote> 」 ┄┄ ◆ BKK <hh:mm> │ EST <hh:mm> │ PST <hh:mm>
 ```
 
-The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.sec9 ▸` ↔ `公安 ｾｸｼｮﾝ9 ｺｳｱﾝ▶` glitch animation runs on second-parity; the quote rotates on minute-parity through 12 GITS lines with a 6-second breath-glow.
+Line 1 is the **live session state** — what stdin and the local git checkout tell us right now: current branch, working directory, active model, context-window fill, and reasoning-effort level. Line 2 is the **persistent identity frame** — the Section 9 brand glitch, the rotating quote, and the world clocks; the ambient "who / when" that doesn't depend on session state.
+
+The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.sec9 ▸` ↔ `公安 ｾｸｼｮﾝ9 ｺｳｱﾝ▶` glitch animation runs on second-parity (now leading line 2); the quote rotates on minute-parity through 12 GITS lines with a 6-second breath-glow.
 
 ## Design contract
 
 ### What's in
 
-- **Stdin parse** — single `jq` call extracts cwd, model display name, context-window used percentage.
+- **Stdin parse** — single `jq` call extracts cwd, model display name, context-window used percentage, and reasoning-effort level.
 - **Branch** — `git branch --show-current` in `$cwd`. Cheap (~5ms). Suppressed cleanly if cwd is not a git repo.
 - **CWD** — `$HOME` is replaced with `~` for compactness.
 - **Model** — first word of the display name, lowercased.
 - **Context bar** — 10-cell gradient (`█▓▒░`) showing used-percentage.
+- **Effort level** — `.effort.level` from stdin (`low`/`medium`/`high`/`xhigh`/`max`), color-coded by intensity. Conditionally absent when the model doesn't support the effort param — the token disappears cleanly when so.
 - **World clocks** — BKK / EST / PST via IANA zones (DST-correct).
 - **Glitch animation** — 16-tick second-parity prefix swap, position-aligned CJK ↔ halfwidth kana.
 - **Quote rotation** — minute-parity index into a 12-entry GITS list, with breath-glow on a 6-second period.
@@ -58,15 +61,26 @@ If/when there's a real second consumer of statusline-shaped data:
 
 Neither is on the critical path. They get designed when a concrete use case forces them.
 
-The install/configure skill that was previously listed here has shipped — see `skills/configure-statusline/`.
+The install/configure skill that was previously listed here has shipped — see `skills/configure-statusline/`. Its install action is version-aware: an older Ghost.sec9 statusline (or one whose path went stale after `/plugin update`) is replaced automatically, while a *different* statusline is only replaced after a backup-and-confirm prompt.
+
+### Identity & version header
+
+`statusline.sh` carries two machine-readable header comments:
+
+```
+# Statusline-ID: ghost-sec9
+# Statusline-Version: 0.2.0
+```
+
+These — not the filename — are how `configure-statusline` recognises our statusline and compares versions. **`Statusline-Version` must be bumped in lockstep with `.claude-plugin/plugin.json` on every release**, or the skill won't see an upgrade is available.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. |
-| `.claude-plugin/plugin.json` | Plugin manifest. |
-| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. Marked `disable-model-invocation: true` — user-invocable only (`/configure-statusline`); the model never auto-loads it, since wiring settings.json is a deliberate, side-effecting opt-in the user should trigger. |
+| `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. Carries the `Statusline-ID` / `Statusline-Version` headers. |
+| `.claude-plugin/plugin.json` | Plugin manifest. `version` must match `statusline.sh`'s `Statusline-Version`. |
+| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Install is version-aware (auto-upgrade ours, backup+confirm a third-party one). Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. Marked `disable-model-invocation: true` — user-invocable only (`/configure-statusline`); the model never auto-loads it, since wiring settings.json is a deliberate, side-effecting opt-in the user should trigger. |
 | `README.md` | Install + tweak instructions. |
 | `CLAUDE.md` | This file — design contract. |
 
