@@ -66,7 +66,7 @@ The install/configure skill that was previously listed here has shipped — see 
 |---|---|
 | `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. |
 | `.claude-plugin/plugin.json` | Plugin manifest. |
-| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. |
+| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. Marked `disable-model-invocation: true` — user-invocable only (`/configure-statusline`); the model never auto-loads it, since wiring settings.json is a deliberate, side-effecting opt-in the user should trigger. |
 | `README.md` | Install + tweak instructions. |
 | `CLAUDE.md` | This file — design contract. |
 
