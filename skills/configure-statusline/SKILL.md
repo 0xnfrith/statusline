@@ -1,6 +1,7 @@
 ---
 name: configure-statusline
 description: Install, update, or uninstall the Ghost.sec9 statusline. Drives an AskUserQuestion-based flow with three actions — install (detect any existing statusLine: auto-upgrade an older Ghost.sec9 copy in place, back up + replace a third-party one after confirmation, else write fresh), update (re-resolve the script path after `/plugin update`), uninstall (remove the `statusLine` block this skill wrote). Use when the user asks to enable, refresh, or remove the statusline.
+disable-model-invocation: true
 ---
 
 # /configure-statusline
