@@ -7,11 +7,11 @@ Themed Claude Code statusline. Pure inline. No MCP server, no cache, no external
 A single bash script (`statusline.sh`) that Claude Code invokes after each assistant message. It reads the session JSON from stdin and emits two lines:
 
 ```
-<branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar>
+<branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar> ◆ EFF <effort>
 幽霊 ghost.sec9 ▸ ┄┄ 「 <rotating GITS quote> 」 ┄┄ ◆ BKK <hh:mm> │ EST <hh:mm> │ PST <hh:mm>
 ```
 
-Line 1 is the **live session state** — what stdin and the local git checkout tell us right now: current branch, working directory, active model, and context-window fill. Line 2 is the **persistent identity frame** — the Section 9 brand glitch, the rotating quote, and the world clocks; the ambient "who / when" that doesn't depend on session state.
+Line 1 is the **live session state** — what stdin and the local git checkout tell us right now: current branch, working directory, active model, context-window fill, and reasoning-effort level. Line 2 is the **persistent identity frame** — the Section 9 brand glitch, the rotating quote, and the world clocks; the ambient "who / when" that doesn't depend on session state.
 
 The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.sec9 ▸` ↔ `公安 ｾｸｼｮﾝ9 ｺｳｱﾝ▶` glitch animation runs on second-parity (now leading line 2); the quote rotates on minute-parity through 12 GITS lines with a 6-second breath-glow.
 
@@ -19,11 +19,12 @@ The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.s
 
 ### What's in
 
-- **Stdin parse** — single `jq` call extracts cwd, model display name, context-window used percentage.
+- **Stdin parse** — single `jq` call extracts cwd, model display name, context-window used percentage, and reasoning-effort level.
 - **Branch** — `git branch --show-current` in `$cwd`. Cheap (~5ms). Suppressed cleanly if cwd is not a git repo.
 - **CWD** — `$HOME` is replaced with `~` for compactness.
 - **Model** — first word of the display name, lowercased.
 - **Context bar** — 10-cell gradient (`█▓▒░`) showing used-percentage.
+- **Effort level** — `.effort.level` from stdin (`low`/`medium`/`high`/`xhigh`/`max`), color-coded by intensity. Conditionally absent when the model doesn't support the effort param — the token disappears cleanly when so.
 - **World clocks** — BKK / EST / PST via IANA zones (DST-correct).
 - **Glitch animation** — 16-tick second-parity prefix swap, position-aligned CJK ↔ halfwidth kana.
 - **Quote rotation** — minute-parity index into a 12-entry GITS list, with breath-glow on a 6-second period.

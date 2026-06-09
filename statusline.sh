@@ -2,7 +2,7 @@
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
 # Rows:
-#   1. BRANCH · CWD · model · ctx bar+%  — live session state
+#   1. BRANCH · CWD · model · ctx bar+% · effort  — live session state
 #   2. 幽霊 ghost.sec9 identity glitch · 「 rotating GITS quote 」 · BKK/EST/PST
 #
 # Data sources:
@@ -27,11 +27,12 @@ set +e
 # Parse Claude Code's JSON input (single jq call)
 # ---------------------------------------------------------------------------
 input=$(cat)
-IFS=$'\t' read -r cwd model used_pct <<< "$(
+IFS=$'\t' read -r cwd model used_pct effort <<< "$(
   echo "$input" | jq -r '[
     .workspace.current_dir // "",
     .model.display_name // "",
-    (.context_window.used_percentage // "" | tostring)
+    (.context_window.used_percentage // "" | tostring),
+    .effort.level // ""
   ] | @tsv' 2>/dev/null
 )"
 
@@ -71,6 +72,24 @@ if [[ -n "$used_pct" && "$used_pct" != "null" && "$used_pct" != "" ]]; then
     cur_len=${#bar}
     for ((i=cur_len; i<10; i++)); do bar+="░"; done
     context_info=$(printf ' \033[2;35m◆\033[0m \033[1;35m%s\033[0m \033[2;35m%d%%\033[0m' "$bar" "$pct")
+fi
+
+# ---------------------------------------------------------------------------
+# Effort level — session reasoning effort, color-coded by intensity.
+# `.effort.level` is absent when the model doesn't support the param, so the
+# token simply disappears in that case.
+# ---------------------------------------------------------------------------
+effort_info=""
+if [[ -n "$effort" && "$effort" != "null" ]]; then
+    case "$effort" in
+        low)    eff_color="\033[2;37m" ;;   # dim white — minimal
+        medium) eff_color="\033[1;36m" ;;   # cyan
+        high)   eff_color="\033[1;33m" ;;   # yellow
+        xhigh)  eff_color="\033[1;35m" ;;   # magenta
+        max)    eff_color="\033[1;31m" ;;   # red — full burn
+        *)      eff_color="\033[1;37m" ;;   # unknown — bright white
+    esac
+    effort_info=$(printf ' \033[2;35m◆\033[0m \033[2;37mEFF\033[0m '"$eff_color"'%s\033[0m' "$effort")
 fi
 
 # ---------------------------------------------------------------------------
@@ -163,6 +182,7 @@ line1=""
 [[ -n "$cwd_short" ]] && line1+=$(printf '\033[1;36m%s\033[0m' "$cwd_short")
 [[ -n "$model_lc" ]] && line1+=$(printf ' \033[2;35m◆\033[0m \033[2;36m%s\033[0m' "$model_lc")
 line1+="$context_info"
+line1+="$effort_info"
 
 # ---------------------------------------------------------------------------
 # Line 2 assembly — identity glitch · rotating quote (breath-glow) · clocks
