@@ -69,7 +69,7 @@ The install/configure skill that was previously listed here has shipped — see 
 
 ```
 # Statusline-ID: ghost-sec9
-# Statusline-Version: 0.2.0
+# Statusline-Version: 0.3.0
 ```
 
 These — not the filename — are how `configure-statusline` recognises our statusline and compares versions. **`Statusline-Version` must be bumped in lockstep with `.claude-plugin/plugin.json` on every release**, or the skill won't see an upgrade is available.
@@ -81,6 +81,7 @@ These — not the filename — are how `configure-statusline` recognises our sta
 | `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. Carries the `Statusline-ID` / `Statusline-Version` headers. |
 | `.claude-plugin/plugin.json` | Plugin manifest. `version` must match `statusline.sh`'s `Statusline-Version`. |
 | `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Install is version-aware (auto-upgrade ours, backup+confirm a third-party one). Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. Marked `disable-model-invocation: true` — user-invocable only (`/configure-statusline`); the model never auto-loads it, since wiring settings.json is a deliberate, side-effecting opt-in the user should trigger. |
+| `skills/configure-statusline/detect-versions.sh` | Version-facts helper run by the skill's `!`backtick`` preprocessor (with a model-run fallback). Derives plugin root from `BASH_SOURCE` (not cwd), reads the current vs. installed (user-scope) `Statusline-Version`, and emits a pre-computed `UPDATE_LABEL` so the Update menu option reads e.g. `Update 0.2.0 → 0.3.0`. Never errors (`set +e`, `exit 0`). |
 | `README.md` | Install + tweak instructions. |
 | `CLAUDE.md` | This file — design contract. |
 

@@ -1,6 +1,6 @@
 {
   "name": "statusline",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Minimal Claude Code statusline — themed identity prefix, branch, cwd, model, context bar, world clocks, rotating quote. Pure inline; no MCP server, no cache, no external producers.",
   "author": {
     "name": "Nicholas Frith"
