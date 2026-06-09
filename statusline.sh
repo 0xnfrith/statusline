@@ -2,7 +2,7 @@
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
 # Statusline-ID: ghost-sec9
-# Statusline-Version: 0.2.0
+# Statusline-Version: 0.3.0
 #   ^ Machine-readable identity + upgrade key, parsed by the
 #     configure-statusline skill to tell our statusline apart from a
 #     third-party one and to decide whether an installed copy is older.

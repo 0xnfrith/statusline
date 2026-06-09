@@ -1,12 +1,34 @@
 ---
 name: configure-statusline
-description: Install, update, or uninstall the Ghost.sec9 statusline. Drives an AskUserQuestion-based flow with three actions — install (detect any existing statusLine: auto-upgrade an older Ghost.sec9 copy in place, back up + replace a third-party one after confirmation, else write fresh), update (re-resolve the script path after `/plugin update`), uninstall (remove the `statusLine` block this skill wrote). Use when the user asks to enable, refresh, or remove the statusline.
+description: Install, update, or uninstall the Ghost.sec9 statusline. Drives an AskUserQuestion-based flow with three actions — install (detect any existing statusLine: auto-upgrade an older Ghost.sec9 copy in place, back up + replace a third-party one after confirmation, else write fresh), update (re-point settings.json to the current plugin version after `/plugin update`), uninstall (remove the `statusLine` block this skill wrote). Use when the user asks to enable, refresh, or remove the statusline.
 disable-model-invocation: true
 ---
 
 # /configure-statusline
 
 Wires the plugin's `statusline.sh` into a Claude Code `settings.json`. Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are permitted there), so the user has to opt in via their own settings file — this skill is that opt-in step.
+
+## Step 0 — current version facts (auto)
+
+!`bash "${CLAUDE_SKILL_DIR}/detect-versions.sh"`
+
+The `key=value` block above is produced by `detect-versions.sh` when the skill loads, so the menu can name real version numbers. `${CLAUDE_SKILL_DIR}` is the documented substitution for the directory holding this `SKILL.md` (resolved before the command runs, regardless of cwd). **If the block is empty, missing, or shows a permission/error message instead of `key=value` lines, run it yourself as your very first action**, then read the values from its output:
+
+```bash
+bash "${CLAUDE_SKILL_DIR}/detect-versions.sh"
+```
+
+(If `${CLAUDE_SKILL_DIR}` ever reaches you unexpanded — i.e. literally `${CLAUDE_SKILL_DIR}` rather than an absolute path — resolve `<plugin_root>` the way Step 2 does and run `<plugin_root>/skills/configure-statusline/detect-versions.sh` instead.)
+
+Keys (all describe **user scope** — `~/.claude/settings.json` — which is always reachable; the Install/Update/Uninstall actions below still detect *both* scopes authoritatively via their own Bash calls, so use these only to label the menu):
+
+| Key | Meaning |
+|---|---|
+| `CURRENT_VERSION` / `CURRENT_PATH` | the `statusline.sh` shipped by the now-active plugin — what install/update writes |
+| `USER_STATUSLINE` | `yes` (ours — ghost-sec9), `no` (a third-party statusline), or `none` (nothing wired) |
+| `USER_INSTALLED_VERSION` / `USER_INSTALLED_PATH` | the version your user-scope settings currently points at (`unknown` if unreadable) |
+| `USER_PATH_IS_CURRENT` | `yes` iff that path already equals `CURRENT_PATH` |
+| `UPDATE_LABEL` / `UPDATE_DESC` | a ready-made label + description for the Update option, pre-computed so you don't have to branch |
 
 ## Step 1 — pick the action
 
@@ -16,7 +38,7 @@ Wires the plugin's `statusline.sh` into a Claude Code `settings.json`. Plugin-sh
 - header: `"Statusline"`
 - options (in this order):
   1. `Install (Recommended)` — write the `statusLine` block to a `settings.json`
-  2. `Update` — re-resolve the script path after `/plugin update statusline`
+  2. Use the Step 0 `UPDATE_LABEL` as the option label and `UPDATE_DESC` as its description, **verbatim** — e.g. `Update 0.2.0 → 0.3.0` / `Re-point your settings.json from the running statusline (v0.2.0) to the current plugin version (v0.3.0).` (If Step 0 produced no values, fall back to the static label `Update` / `Re-point settings.json to the current plugin version after /plugin update`.)
   3. `Uninstall` — remove the `statusLine` block this skill previously wrote
 
 ## Step 2 — resolve the script path
@@ -37,7 +59,7 @@ Our statusline carries two machine-readable header comments near the top of `sta
 
 ```
 # Statusline-ID: ghost-sec9
-# Statusline-Version: 0.2.0
+# Statusline-Version: 0.3.0
 ```
 
 These — **not** the filename — are how the skill recognises our statusline and decides whether an installed copy is older. Use these idioms:

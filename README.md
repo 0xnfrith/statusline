@@ -22,7 +22,7 @@ main ◆ ~/HUB/statusline ◆ opus ◆ ███▒░░░░░░ 38% ◆ EF
 `/configure-statusline` is a three-option guided flow:
 
 1. **Install** (default) — asks whether to write the `statusLine` block to user (`~/.claude/settings.json`) or project (`<cwd>/.claude/settings.json`) scope, then writes it. It's **version-aware**: if a Ghost.sec9 statusline is already installed but older (or its path went stale after a `/plugin update`), it's replaced automatically. If a *different* statusline is already there, it asks first and backs it up before replacing.
-2. **Update** — re-resolves the script path. The cached install path looks like `~/.claude/plugins/cache/nfrith-plugins/statusline/0.2.0/statusline.sh`, so the version segment goes stale after `/plugin update statusline`. Run this to refresh it.
+2. **Update** — re-points your `settings.json` to the current plugin version. Claude Code installs each plugin version into its own cache dir (`~/.claude/plugins/cache/nfrith-plugins/statusline/0.3.0/statusline.sh`), and your `settings.json` holds an absolute path to one of them. So after `/plugin update statusline` downloads a new version, the old path keeps working — you silently keep rendering the old statusline until you re-point. This option does the re-pointing, and now names the exact versions: e.g. **`Update 0.2.0 → 0.3.0`**.
 3. **Uninstall** — removes the `statusLine` block this skill wrote.
 
 Our statusline is recognised by a `# Statusline-ID: ghost-sec9` header in the script — **not** by filename — so the skill never clobbers a third-party `statusLine` without asking, and always drops a `.bak` next to the file before writing. Restart your Claude Code session after install or update.
