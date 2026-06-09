@@ -12,11 +12,13 @@ Wires the plugin's `statusline.sh` into a Claude Code `settings.json`. Plugin-sh
 
 !`bash "${CLAUDE_SKILL_DIR}/detect-versions.sh"`
 
-The `key=value` block above is produced by `detect-versions.sh` when the skill loads, so the menu can name real version numbers. **If it is empty, missing, or shows a permission/error message instead of `key=value` lines, run it yourself as your very first action**, then read the values from its output:
+The `key=value` block above is produced by `detect-versions.sh` when the skill loads, so the menu can name real version numbers. `${CLAUDE_SKILL_DIR}` is the documented substitution for the directory holding this `SKILL.md` (resolved before the command runs, regardless of cwd). **If the block is empty, missing, or shows a permission/error message instead of `key=value` lines, run it yourself as your very first action**, then read the values from its output:
 
 ```bash
 bash "${CLAUDE_SKILL_DIR}/detect-versions.sh"
 ```
+
+(If `${CLAUDE_SKILL_DIR}` ever reaches you unexpanded — i.e. literally `${CLAUDE_SKILL_DIR}` rather than an absolute path — resolve `<plugin_root>` the way Step 2 does and run `<plugin_root>/skills/configure-statusline/detect-versions.sh` instead.)
 
 Keys (all describe **user scope** — `~/.claude/settings.json` — which is always reachable; the Install/Update/Uninstall actions below still detect *both* scopes authoritatively via their own Bash calls, so use these only to label the menu):
 
