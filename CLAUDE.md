@@ -61,15 +61,26 @@ If/when there's a real second consumer of statusline-shaped data:
 
 Neither is on the critical path. They get designed when a concrete use case forces them.
 
-The install/configure skill that was previously listed here has shipped — see `skills/configure-statusline/`.
+The install/configure skill that was previously listed here has shipped — see `skills/configure-statusline/`. Its install action is version-aware: an older Ghost.sec9 statusline (or one whose path went stale after `/plugin update`) is replaced automatically, while a *different* statusline is only replaced after a backup-and-confirm prompt.
+
+### Identity & version header
+
+`statusline.sh` carries two machine-readable header comments:
+
+```
+# Statusline-ID: ghost-sec9
+# Statusline-Version: 0.2.0
+```
+
+These — not the filename — are how `configure-statusline` recognises our statusline and compares versions. **`Statusline-Version` must be bumped in lockstep with `.claude-plugin/plugin.json` on every release**, or the skill won't see an upgrade is available.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. |
-| `.claude-plugin/plugin.json` | Plugin manifest. |
-| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. |
+| `statusline.sh` | The face. Invoked by Claude Code, reads stdin, writes two lines to stdout. Carries the `Statusline-ID` / `Statusline-Version` headers. |
+| `.claude-plugin/plugin.json` | Plugin manifest. `version` must match `statusline.sh`'s `Statusline-Version`. |
+| `skills/configure-statusline/SKILL.md` | Install/audit/update/uninstall skill. Install is version-aware (auto-upgrade ours, backup+confirm a third-party one). Plugin-shipped `settings.json` cannot set `statusLine` (only `agent` / `subagentStatusLine` are allowed), so this skill is the wiring step. |
 | `README.md` | Install + tweak instructions. |
 | `CLAUDE.md` | This file — design contract. |
 

@@ -1,6 +1,13 @@
 #!/bin/bash
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
+# Statusline-ID: ghost-sec9
+# Statusline-Version: 0.2.0
+#   ^ Machine-readable identity + upgrade key, parsed by the
+#     configure-statusline skill to tell our statusline apart from a
+#     third-party one and to decide whether an installed copy is older.
+#     Keep Statusline-Version in lockstep with .claude-plugin/plugin.json.
+#
 # Rows:
 #   1. BRANCH · CWD · model · ctx bar+% · effort  — live session state
 #   2. 幽霊 ghost.sec9 identity glitch · 「 rotating GITS quote 」 · BKK/EST/PST
