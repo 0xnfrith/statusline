@@ -7,11 +7,13 @@ Themed Claude Code statusline. Pure inline. No MCP server, no cache, no external
 A single bash script (`statusline.sh`) that Claude Code invokes after each assistant message. It reads the session JSON from stdin and emits two lines:
 
 ```
-幽霊 ghost.sec9 ▸ <branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar> ◆ BKK <hh:mm> │ EST <hh:mm> │ PST <hh:mm>
-┄┄ 「 <rotating GITS quote> 」 ┄┄
+<branch> ◆ <cwd> ◆ <model> ◆ <ctx-bar>
+幽霊 ghost.sec9 ▸ ┄┄ 「 <rotating GITS quote> 」 ┄┄ ◆ BKK <hh:mm> │ EST <hh:mm> │ PST <hh:mm>
 ```
 
-The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.sec9 ▸` ↔ `公安 ｾｸｼｮﾝ9 ｺｳｱﾝ▶` glitch animation runs on second-parity; the quote rotates on minute-parity through 12 GITS lines with a 6-second breath-glow.
+Line 1 is the **live session state** — what stdin and the local git checkout tell us right now: current branch, working directory, active model, and context-window fill. Line 2 is the **persistent identity frame** — the Section 9 brand glitch, the rotating quote, and the world clocks; the ambient "who / when" that doesn't depend on session state.
+
+The aesthetic is Section 9 / Ghost in the Shell — the 16-frame `幽霊 ghost.sec9 ▸` ↔ `公安 ｾｸｼｮﾝ9 ｺｳｱﾝ▶` glitch animation runs on second-parity (now leading line 2); the quote rotates on minute-parity through 12 GITS lines with a 6-second breath-glow.
 
 ## Design contract
 

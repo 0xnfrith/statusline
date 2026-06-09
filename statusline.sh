@@ -2,8 +2,8 @@
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
 # Rows:
-#   1. 幽霊 ghost.sec9 identity · BRANCH · CWD · model · ctx bar+% · BKK/EST/PST
-#   2. 「 rotating GITS quote 」 — minute-parity rotation
+#   1. BRANCH · CWD · model · ctx bar+%  — live session state
+#   2. 幽霊 ghost.sec9 identity glitch · 「 rotating GITS quote 」 · BKK/EST/PST
 #
 # Data sources:
 #   - stdin JSON (Claude Code session info: cwd, model, context_window)
@@ -104,7 +104,7 @@ quote_text="${quotes[$q_idx]}"
 RESET="\033[0m"
 
 # ---------------------------------------------------------------------------
-# Line 1 assembly
+# Glitch animation prefix — leads line 2.
 # ---------------------------------------------------------------------------
 # Prefix glitch animation — 16-tick cycle.
 #   Frame 0: original `幽霊 ghost.sec9 ▸`
@@ -155,20 +155,27 @@ for ((i=0; i<15; i++)); do
   fi
 done
 
+# ---------------------------------------------------------------------------
+# Line 1 assembly — live session state (branch · cwd · model · ctx bar)
+# ---------------------------------------------------------------------------
 line1=""
-line1+="$(printf '%b' "$prefix")"
-[[ -n "$branch" ]] && line1+=$(printf ' \033[1;33m%s\033[0m' "$branch")
-line1+=$(printf ' \033[2;35m◆\033[0m')
-[[ -n "$cwd_short" ]] && line1+=$(printf ' \033[1;36m%s\033[0m' "$cwd_short")
+[[ -n "$branch" ]] && line1+=$(printf '\033[1;33m%s\033[0m \033[2;35m◆\033[0m ' "$branch")
+[[ -n "$cwd_short" ]] && line1+=$(printf '\033[1;36m%s\033[0m' "$cwd_short")
 [[ -n "$model_lc" ]] && line1+=$(printf ' \033[2;35m◆\033[0m \033[2;36m%s\033[0m' "$model_lc")
 line1+="$context_info"
-line1+="$clocks"
+
+# ---------------------------------------------------------------------------
+# Line 2 assembly — identity glitch · rotating quote (breath-glow) · clocks
+# ---------------------------------------------------------------------------
+if (( phase_breath == 0 )); then quote_color="\033[0;35m"; else quote_color="\033[2;35m"; fi
+line2="$(printf '%b' "$prefix")"
+line2+=$(printf ' \033[2;35m┄┄\033[0m')
+line2+=$(printf " ${quote_color}「 %s 」${RESET}" "$quote_text")
+line2+=$(printf ' \033[2;35m┄┄\033[0m')
+line2+="$clocks"
 
 # ---------------------------------------------------------------------------
 # Emit
 # ---------------------------------------------------------------------------
 echo "$line1"
-
-# Line 2 — rotating quote with breath-glow
-if (( phase_breath == 0 )); then quote_color="\033[0;35m"; else quote_color="\033[2;35m"; fi
-printf "\033[2;35m┄┄\033[0m ${quote_color}「 %s 」${RESET} \033[2;35m┄┄\033[0m\n" "$quote_text"
+echo "$line2"
