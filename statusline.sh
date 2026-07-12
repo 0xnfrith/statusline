@@ -2,7 +2,7 @@
 # statusline.sh — Themed Claude Code statusline (pure inline, no external data)
 #
 # Statusline-ID: ghost-sec9
-# Statusline-Version: 0.3.0
+# Statusline-Version: 0.3.1
 #   ^ Machine-readable identity + upgrade key, parsed by the
 #     configure-statusline skill to tell our statusline apart from a
 #     third-party one and to decide whether an installed copy is older.
@@ -108,6 +108,29 @@ pst=$(TZ="America/Los_Angeles" date +%H:%M)
 clocks=$(printf ' \033[2;35m◆\033[0m \033[2;37mBKK\033[0m \033[1;97m%s\033[0m \033[2;35m│\033[0m \033[2;37mEST\033[0m \033[1;97m%s\033[0m \033[2;35m│\033[0m \033[2;37mPST\033[0m \033[1;97m%s\033[0m' "$bkk" "$est" "$pst")
 
 # ---------------------------------------------------------------------------
+# ghost-tag watcher state (GHOST-290) — reads ~/.ghost-tag/ written by the
+# Beeper @ghost tag-watcher. No ~/.ghost-tag directory -> no segment, so
+# machines without ghost-tag render nothing. Colorblind-safe (no red/green):
+# cyan listening / dim paused / yellow stale, each with a distinct glyph so
+# color is never the only signal. Stale = no tick in 15min (3 tick periods).
+# ---------------------------------------------------------------------------
+ghost_tag_info=""
+gt_dir="$HOME/.ghost-tag"
+if [[ -d "$gt_dir" ]]; then
+    if [[ -f "$gt_dir/paused" ]]; then
+        ghost_tag_info=$(printf ' \033[2;35m◆\033[0m \033[2;37mTAG ⏸ paused\033[0m')
+    else
+        gt_mtime=$(stat -f %m "$gt_dir/last-tick.json" 2>/dev/null || stat -c %Y "$gt_dir/last-tick.json" 2>/dev/null)
+        gt_now=$(date +%s)
+        if [[ -n "$gt_mtime" ]] && (( gt_now - gt_mtime < 900 )); then
+            ghost_tag_info=$(printf ' \033[2;35m◆\033[0m \033[2;37mTAG\033[0m \033[1;36m● listening\033[0m')
+        else
+            ghost_tag_info=$(printf ' \033[2;35m◆\033[0m \033[2;37mTAG\033[0m \033[1;33m! stale\033[0m')
+        fi
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # GITS quote rotation (minute-parity) — kept short to fit in frame header
 # ---------------------------------------------------------------------------
 quotes=(
@@ -200,6 +223,7 @@ line2+=$(printf ' \033[2;35m┄┄\033[0m')
 line2+=$(printf " ${quote_color}「 %s 」${RESET}" "$quote_text")
 line2+=$(printf ' \033[2;35m┄┄\033[0m')
 line2+="$clocks"
+line2+="$ghost_tag_info"
 
 # ---------------------------------------------------------------------------
 # Emit
